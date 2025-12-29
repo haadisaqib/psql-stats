@@ -18,3 +18,8 @@ type Table struct {
 	numOfRows     int
 	totalSpace    int
 }
+
+type returnValues struct {
+	database *Database
+	table *Table
+}
