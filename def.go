@@ -7,7 +7,8 @@ type Database struct {
 	name                string
 	numOfTables         int
 	nameOfTables        []string
-	totalSpace          int
+	tables              []Table
+	totalSpace          int64
 }
 
 type Table struct {
@@ -15,11 +16,15 @@ type Table struct {
 	name     string
 	columnsnames  []string
 	columnTypes []string
-	numOfRows     int
-	totalSpace    int
+	numOfRows     int64
+	totalSpace    int64
 }
 
-type returnValues struct {
-	database *Database
-	table *Table
+type Model struct {
+	database   *Database
+	cursor     int              // which table we're pointing at
+	selected   map[int]struct{} // which tables are expanded/selected
+	viewMode   string           // "overview" or "table"
 }
+
+
