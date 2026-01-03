@@ -66,6 +66,36 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 func (m Model) View() string {
 	var s strings.Builder
 
+	const pageSize = 10 
+	numTables := len(m.database.tables)
+
+	cursor := m.cursor
+	if numTables > 0 && cursor >= numTables {
+		cursor = numTables - 1
+	} else if cursor < 0 {
+		cursor = 0
+	}
+
+	pageStart := 0
+	pageEnd := 0
+	if numTables <= pageSize {
+		pageStart = 0
+		pageEnd = numTables
+	} else {
+		pageStart = cursor - pageSize/2
+		if pageStart < 0 {
+			pageStart = 0
+		}
+		pageEnd = pageStart + pageSize
+		if pageEnd > numTables {
+			pageEnd = numTables
+			pageStart = pageEnd - pageSize
+			if pageStart < 0 {
+				pageStart = 0
+			}
+		}
+	}
+
 	// Database Overview Header
 	s.WriteString("╔═══════════════════════════════════════════════════════════╗\n")
 	s.WriteString("║                    DATABASE STATISTICS                    ║\n")
@@ -81,14 +111,15 @@ func (m Model) View() string {
 	s.WriteString("║                         TABLES                            ║\n")
 	s.WriteString("╚═══════════════════════════════════════════════════════════╝\n\n")
 
-	if len(m.database.tables) == 0 {
+	if numTables == 0 {
 		s.WriteString("No tables found.\n")
 	} else {
-		for i, table := range m.database.tables {
+		for i := pageStart; i < pageEnd; i++ {
+			table := m.database.tables[i]
 			// Cursor indicator
-			cursor := " "
+			cursorStr := " "
 			if m.cursor == i {
-				cursor = ">"
+				cursorStr = ">"
 			}
 
 			// Expanded indicator
@@ -100,7 +131,7 @@ func (m Model) View() string {
 			}
 
 			// Table summary line
-			s.WriteString(fmt.Sprintf("%s %s %s\n", cursor, expanded, table.name))
+			s.WriteString(fmt.Sprintf("%s %s %s\n", cursorStr, expanded, table.name))
 			s.WriteString(fmt.Sprintf("   Rows: %d | Space: %s\n", table.numOfRows, formatBytes(table.totalSpace)))
 
 			// Expanded details
@@ -116,6 +147,13 @@ func (m Model) View() string {
 				}
 				s.WriteString("\n")
 			}
+		}
+		// Show an indicator if not all tables are visible
+		if pageStart > 0 {
+			s.WriteString("(↑ More above...)\n")
+		}
+		if pageEnd < numTables {
+			s.WriteString("(↓ More below...)\n")
 		}
 	}
 
