@@ -1,0 +1,45 @@
+# Binaries
+psql-stats
+dist/
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+
+# Test binary
+*.test
+
+# Output of the go coverage tool
+*.out
+
+# Dependency directories
+vendor/
+
+# Go workspace file
+go.work
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# Build artifacts
+*.deb
+*.rpm
+*.tar.gz
+*.zip
+
+# AUR
+*.pkg.tar.zst
+src/
+pkg/
+
+# Debian
+debian/files
+debian/.debhelper/
+debian/psql-stats/
+
+.github/

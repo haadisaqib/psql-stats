@@ -1,0 +1,12 @@
+Source: psql-stats
+Section: database
+Priority: optional
+Maintainer: Haadi Saqib <haadi.saqib@gmail.com>
+Build-Depends: debhelper-compat (= 13), golang-go (>= 1.20), git
+Standards-Version: 4.6.0
+Homepage: https://github.com/haadisaqib/psql-stats
+
+Package: psql-stats
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}
+Description: A terminal UI tool for viewing PostgreSQL database statistics
