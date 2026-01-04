@@ -3,34 +3,54 @@ package main
 import (
 	"database/sql"
 	"fmt"
-	"regexp"
+	"net/url"
 	_ "github.com/lib/pq"
+	"sync"
 )
 
 func fetchDatabaseInfo(db *Database, connectionString string) error {
-	db.name = GetDatabaseName(connectionString)
-	if err := GetNumberOfTables(db); err != nil {
-		return err
-	}
-	if err := GetTableNames(db); err != nil {
-		return err
-	}
-	if err := TotalSpace(db); err != nil {
-		return err
-	}
+	var wg sync.WaitGroup
+	var errs = make(chan error, 4)
+	wg.Add(4)
+
+	go func() {
+		db.name = GetDatabaseName(connectionString, &wg)
+	}()
+
+	go func() {
+		if err := GetNumberOfTables(db, &wg); err != nil {
+			errs <- err
+		}
+	}()
+
+	go func() {
+		if err := GetTableNames(db, &wg); err != nil {
+			errs <- err
+		}
+	}()
+	go func() {
+		if err := TotalSpace(db, &wg); err != nil {
+			errs <- err
+		}
+	}()
+
+	wg.Wait()
+	close(errs)
+
 	return nil
 }
 
-func GetDatabaseName(connectionString string) string {
-	re := regexp.MustCompile(`databaseName=([^;]+)`)
-	match := re.FindStringSubmatch(connectionString)
-	if len(match) >= 2 {
-		return match[1]
+func GetDatabaseName(connectionString string, wg *sync.WaitGroup) string {
+	defer wg.Done()
+	u, err := url.Parse(connectionString)
+	if err != nil {
+		return ""
 	}
-	return ""
+	return u.Path[1:]
 }
 
-func GetNumberOfTables(db *Database) error {
+func GetNumberOfTables(db *Database, wg *sync.WaitGroup) error {
+	defer wg.Done()
 	query := "SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = 'public'"
 	rows, err := db.db.Query(query)
 	if err != nil {
@@ -46,7 +66,8 @@ func GetNumberOfTables(db *Database) error {
 }
 
 
-func GetTableNames(db *Database) error {
+func GetTableNames(db *Database, wg *sync.WaitGroup) error {
+	defer wg.Done()
 	query := "SELECT table_name FROM information_schema.tables WHERE table_schema = 'public'"
 	rows, err := db.db.Query(query)
 	if err != nil {
@@ -64,7 +85,8 @@ func GetTableNames(db *Database) error {
 	return rows.Err()
 }
 
-func TotalSpace(db *Database) error {
+func TotalSpace(db *Database, wg *sync.WaitGroup) error {
+	defer wg.Done()
 	query := `
 		SELECT SUM(pg_total_relation_size(pg_class.oid))
 		FROM pg_class

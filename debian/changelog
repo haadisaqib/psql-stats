@@ -1,9 +1,0 @@
-psql-stats (1.0.0-1) unstable; urgency=medium
-
-  * Initial release
-  * Terminal UI for PostgreSQL statistics
-  * Interactive table browser
-  * Column and space usage information
-
- -- Your Name <your.email@example.com>  Mon, 01 Jan 2024 12:00:00 +0000
-
