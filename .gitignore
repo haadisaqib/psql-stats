@@ -1,6 +1,5 @@
 # Binaries
 psql-stats
-dist/
 *.exe
 *.exe~
 *.dll
